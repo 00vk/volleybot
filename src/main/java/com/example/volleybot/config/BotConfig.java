@@ -1,11 +1,10 @@
 package com.example.volleybot.config;
 
 import com.example.volleybot.Volleybot;
-import com.example.volleybot.service.UpdateService;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
 
 /**
  * Created by vkondratiev on 04.09.2021
@@ -13,6 +12,7 @@ import org.springframework.stereotype.Component;
  */
 
 @Configuration
+@EnableConfigurationProperties
 @ConfigurationProperties(prefix = "telegrambot")
 public class BotConfig {
 

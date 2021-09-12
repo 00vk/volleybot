@@ -2,9 +2,7 @@ package com.example.volleybot.controller;
 
 import com.example.volleybot.Volleybot;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -12,7 +10,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
  * Created by vkondratiev on 04.09.2021
  * Description:
  */
-@Controller
+@RestController
 public class WebhookController {
 
     private final Volleybot volleybot;
@@ -21,13 +19,17 @@ public class WebhookController {
         this.volleybot = volleybot;
     }
 
-    @PostMapping
+    //    @PostMapping("/")
+//    public BotApiMethod<?> onUpdateReceived(@RequestBody Update update) {
+//        return volleybot.onWebhookUpdateReceived(update);
+//    }
+    @RequestMapping(value = "/", method = RequestMethod.POST)
     public BotApiMethod<?> onUpdateReceived(@RequestBody Update update) {
         return volleybot.onWebhookUpdateReceived(update);
     }
 
-    @GetMapping
-    public String mainPage() {
-        return "Volleyball schedule manager";
-    }
+//    @GetMapping("/")
+//    public String mainPage() {
+//        return "Volleyball schedule manager";
+//    }
 }
