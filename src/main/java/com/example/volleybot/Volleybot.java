@@ -1,6 +1,7 @@
 package com.example.volleybot;
 
 import com.example.volleybot.config.BotConfig;
+import com.example.volleybot.service.UpdateService;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.telegram.telegrambots.bots.TelegramWebhookBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
@@ -19,29 +20,30 @@ public class Volleybot extends TelegramWebhookBot {
     private final String username;
     private final String webhookPath;
     private final String botToken;
+    private final UpdateService updateService;
 
-
-    public Volleybot(String username, String webhookPath, String botToken) {
+    public Volleybot(String username, String webhookPath, String botToken, UpdateService service) {
         this.username = username;
         this.webhookPath = webhookPath;
         this.botToken = botToken;
+        this.updateService = service;
     }
 
     @Override
     public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
-//        return updateService.onUpdateReceived(update);
-        if (update.getMessage() != null && update.getMessage().hasText()) {
-            long chatId = update.getMessage().getChatId();
-            try {
-                SendMessage outMessage = new SendMessage();
-                outMessage.setChatId(String.valueOf(chatId));
-                outMessage.setText("Hi! " + update.getMessage().getText());
-                execute(outMessage);
-            } catch (TelegramApiException e) {
-                e.printStackTrace();
-            }
-        }
-        return null;
+        return updateService.handleUpdate(update);
+//        if (update.getMessage() != null && update.getMessage().hasText()) {
+//            long chatId = update.getMessage().getChatId();
+//            try {
+//                SendMessage outMessage = new SendMessage();
+//                outMessage.setChatId(String.valueOf(chatId));
+//                outMessage.setText("Hi! " + update.getMessage().getText());
+//                execute(outMessage);
+//            } catch (TelegramApiException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//        return null;
     }
 
     //    public void botConnect() {
