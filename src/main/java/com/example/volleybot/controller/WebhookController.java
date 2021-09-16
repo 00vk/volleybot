@@ -19,17 +19,8 @@ public class WebhookController {
         this.volleybot = volleybot;
     }
 
-    //    @PostMapping("/")
-//    public BotApiMethod<?> onUpdateReceived(@RequestBody Update update) {
-//        return volleybot.onWebhookUpdateReceived(update);
-//    }
-    @RequestMapping(value = "/", method = RequestMethod.POST)
+    @PostMapping("/")
     public BotApiMethod<?> onUpdateReceived(@RequestBody Update update) {
         return volleybot.onWebhookUpdateReceived(update);
     }
-
-//    @GetMapping("/")
-//    public String mainPage() {
-//        return "Volleyball schedule manager";
-//    }
 }

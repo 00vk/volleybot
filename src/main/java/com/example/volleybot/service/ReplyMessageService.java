@@ -24,7 +24,4 @@ public class ReplyMessageService {
         return new SendMessage(chatId, messageText);
     }
 
-    public MessageSource getMessageSource() {
-        return messageSource;
-    }
 }

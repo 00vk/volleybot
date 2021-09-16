@@ -1,5 +1,6 @@
 package com.example.volleybot.service;
 
+import com.example.volleybot.entity.Player;
 import com.example.volleybot.repository.PlayerRepository;
 import org.springframework.stereotype.Service;
 
@@ -17,5 +18,8 @@ public class PlayerService {
         this.repository = repository;
     }
 
+    public Player findPlayer(long chatId) {
+        return repository.findByChatId(chatId);
+    }
 
 }

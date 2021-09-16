@@ -1,6 +1,7 @@
 package com.example.volleybot.config;
 
 import com.example.volleybot.Volleybot;
+import com.example.volleybot.service.UpdateService;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.MessageSource;
@@ -18,13 +19,13 @@ import org.springframework.context.support.ReloadableResourceBundleMessageSource
 @ConfigurationProperties(prefix = "telegrambot")
 public class BotConfig {
 
-    private String webHookPath;
-    private String userName;
-    private String botToken;
+    private String webhookPath;
+    private String username;
+    private String token;
 
     @Bean
-    public Volleybot volleybot() {
-        return new Volleybot(userName, webHookPath, botToken);
+    public Volleybot volleybot(UpdateService service) {
+        return new Volleybot(username, webhookPath, token, service);
     }
 
     @Bean
@@ -35,27 +36,27 @@ public class BotConfig {
         return source;
     }
 
-    public String getWebHookPath() {
-        return webHookPath;
+    public String getWebhookPath() {
+        return webhookPath;
     }
 
-    public void setWebHookPath(String webHookPath) {
-        this.webHookPath = webHookPath;
+    public void setWebhookPath(String webhookPath) {
+        this.webhookPath = webhookPath;
     }
 
-    public String getUserName() {
-        return userName;
+    public String getUsername() {
+        return username;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
-    public String getBotToken() {
-        return botToken;
+    public String getToken() {
+        return token;
     }
 
-    public void setBotToken(String botToken) {
-        this.botToken = botToken;
+    public void setToken(String token) {
+        this.token = token;
     }
 }

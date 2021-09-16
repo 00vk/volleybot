@@ -32,36 +32,8 @@ public class Volleybot extends TelegramWebhookBot {
     @Override
     public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
         return updateService.handleUpdate(update);
-//        if (update.getMessage() != null && update.getMessage().hasText()) {
-//            long chatId = update.getMessage().getChatId();
-//            try {
-//                SendMessage outMessage = new SendMessage();
-//                outMessage.setChatId(String.valueOf(chatId));
-//                outMessage.setText("Hi! " + update.getMessage().getText());
-//                execute(outMessage);
-//            } catch (TelegramApiException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//        return null;
     }
 
-    //    public void botConnect() {
-//        TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
-//        try {
-//            telegramBotsApi.registerBot(this);
-//            log.info("TelegramAPI started. Look for messages");
-//        } catch (TelegramApiRequestException e) {
-//            log.error("Cant Connect. Pause " + RECONNECT_PAUSE / 1000 + "sec and try again. Error: " + e.getMessage());
-//            try {
-//                Thread.sleep(RECONNECT_PAUSE);
-//            } catch (InterruptedException e1) {
-//                e1.printStackTrace();
-//                return;
-//            }
-//            botConnect();
-//        }
-//    }
     @Override
     public String getBotUsername() {
         return username;
