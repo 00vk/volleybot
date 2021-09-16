@@ -2,9 +2,8 @@ package com.example.volleybot.botapi.messagehandler;
 
 import com.example.volleybot.botapi.BotState;
 import com.example.volleybot.cache.UserDataCache;
-import com.example.volleybot.service.ReplyMessageService;
+import com.example.volleybot.service.SendMessageService;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 
 /**
@@ -15,17 +14,17 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 public class DefaultMessageHandler implements IMessageHandler {
 
     private final UserDataCache userDataCache;
-    private final ReplyMessageService replyMessageService;
+    private final SendMessageService sendMessageService;
 
-    public DefaultMessageHandler(UserDataCache userDataCache, ReplyMessageService replyMessageService) {
+    public DefaultMessageHandler(UserDataCache userDataCache, SendMessageService sendMessageService) {
         this.userDataCache = userDataCache;
-        this.replyMessageService = replyMessageService;
+        this.sendMessageService = sendMessageService;
     }
 
     @Override
-    public SendMessage handle(Message inMessage) {
+    public void handle(Message inMessage) {
         userDataCache.setUserBotState(inMessage.getChatId(), BotState.DEFAULT);
-        return replyMessageService.getSendMessage(inMessage.getChatId().toString(), "reply.default");
+        sendMessageService.sendMessage(inMessage.getChatId(), "reply.default").run();
     }
 
     @Override

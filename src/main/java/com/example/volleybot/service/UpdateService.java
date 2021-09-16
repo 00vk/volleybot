@@ -6,7 +6,6 @@ import com.example.volleybot.cache.UserDataCache;
 import com.example.volleybot.entity.Player;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -21,28 +20,28 @@ public class UpdateService {
     private final BotStateContext stateContext;
     private final UserDataCache userDataCache;
     private final PlayerService playerService;
-    private final LoggerService loggerService;
+    private final SendMessageService sendMessageService;
+    private String token;
 
     public UpdateService(BotStateContext stateContext,
                          UserDataCache userDataCache,
                          PlayerService playerService,
-                         LoggerService loggerService) {
+                         SendMessageService sendMessageService) {
         this.stateContext = stateContext;
         this.userDataCache = userDataCache;
         this.playerService = playerService;
-        this.loggerService = loggerService;
+        this.sendMessageService = sendMessageService;
     }
 
     public BotApiMethod<?> handleUpdate(Update update) {
-        SendMessage outMessage = null;
         Message message = update.getMessage();
         if (message != null && message.hasText()) {
-            outMessage = handleIncomingMessage(message);
+            handleIncomingMessage(message);
         }
-        return outMessage;
+        return null;
     }
 
-    private SendMessage handleIncomingMessage(Message inMessage) {
+    private void handleIncomingMessage(Message inMessage) {
         long chatId = inMessage.getChatId();
         Player player = playerService.findPlayer(chatId);
         BotState botState;
@@ -52,7 +51,12 @@ public class UpdateService {
             botState = BotState.DEFAULT;
         }
         userDataCache.setUserBotState(chatId, botState);
-        loggerService.logAction("action.authSuccess", "" + chatId);
-        return stateContext.handler(botState).handle(inMessage);
+        sendMessageService.log("action.authSuccess", "" + chatId);
+        stateContext.handler(botState).handle(inMessage);
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+        sendMessageService.setToken(token);
     }
 }

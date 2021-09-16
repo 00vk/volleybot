@@ -25,6 +25,7 @@ public class BotConfig {
 
     @Bean
     public Volleybot volleybot(UpdateService service) {
+        service.setToken(token);
         return new Volleybot(username, webhookPath, token, service);
     }
 

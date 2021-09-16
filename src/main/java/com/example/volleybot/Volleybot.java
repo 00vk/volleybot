@@ -17,15 +17,15 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 @EnableConfigurationProperties(BotConfig.class)
 public class Volleybot extends TelegramWebhookBot {
 
-    private final String username;
     private final String webhookPath;
-    private final String botToken;
+    private final String username;
+    private final String token;
     private final UpdateService updateService;
 
-    public Volleybot(String username, String webhookPath, String botToken, UpdateService service) {
+    public Volleybot(String username, String webhookPath, String token, UpdateService service) {
         this.username = username;
         this.webhookPath = webhookPath;
-        this.botToken = botToken;
+        this.token = token;
         this.updateService = service;
     }
 
@@ -46,6 +46,6 @@ public class Volleybot extends TelegramWebhookBot {
 
     @Override
     public String getBotToken() {
-        return botToken;
+        return token;
     }
 }

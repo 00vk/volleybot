@@ -2,7 +2,6 @@ package com.example.volleybot.botapi.messagehandler;
 
 import com.example.volleybot.botapi.BotState;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 
 /**
@@ -12,7 +11,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 @Component
 public interface IMessageHandler {
 
-    SendMessage handle(Message inMessage);
+    void handle(Message inMessage);
 
     BotState state();
 }
