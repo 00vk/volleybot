@@ -33,8 +33,8 @@ public class SendMessageService {
      * @param replyTag сообщение из проперти messages, содержащее формат сообщения для лога.
      * @param params   значения, которые должны подставиться в сообщение
      */
-    public Runnable sendMessage(long chatId, String replyTag, String... params) {
-        return () -> {
+    public void sendMessage(long chatId, String replyTag, String... params) {
+        Runnable runnable = () -> {
             String replyFormat = messageSource.getMessage(replyTag, null, Locale.forLanguageTag("ru-RU"));
             String replyText = String.format(replyFormat, (Object[]) params);
             HttpEntity<Map<String, Object>> replyRequest;
@@ -46,10 +46,11 @@ public class SendMessageService {
                 e.printStackTrace();
             }
         };
+        runnable.run();
     }
 
     public void log(String logRecord, String... params) {
-        sendMessage(LOG_CHAT_ID, logRecord, params).run();
+        sendMessage(LOG_CHAT_ID, logRecord, params);
     }
 
     private Map<String, Object> requestBody(long chatId, String logText) {

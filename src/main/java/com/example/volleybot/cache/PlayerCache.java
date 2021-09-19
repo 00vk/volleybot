@@ -11,16 +11,16 @@ import java.util.Map;
  * Description:
  */
 @Component
-public class UserDataCache {
+public class PlayerCache {
 
-    private final Map<Long, BotState> userBotStates = new HashMap<>();
+    private final Map<Long, BotState> playerBotStates = new HashMap<>();
 
     public void setUserBotState(long chatId, BotState botState) {
-        this.userBotStates.put(chatId, botState);
+        this.playerBotStates.put(chatId, botState);
     }
 
-    public BotState getUserBotState(long chatId) {
-        userBotStates.putIfAbsent(chatId, BotState.DEFAULT);
-        return userBotStates.get(chatId);
+    public BotState botState(long chatId) {
+        playerBotStates.putIfAbsent(chatId, BotState.START);
+        return playerBotStates.get(chatId);
     }
 }

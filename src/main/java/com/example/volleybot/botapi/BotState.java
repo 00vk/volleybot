@@ -5,5 +5,10 @@ package com.example.volleybot.botapi;
  * Description:
  */
 public enum BotState {
-    DEFAULT, AUTH
+
+    START, // бот запущен
+    AUTH, // пользователь авторизован
+    DEFAULT
+
+
 }

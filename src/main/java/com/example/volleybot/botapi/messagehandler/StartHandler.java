@@ -1,7 +1,7 @@
 package com.example.volleybot.botapi.messagehandler;
 
 import com.example.volleybot.botapi.BotState;
-import com.example.volleybot.cache.UserDataCache;
+import com.example.volleybot.cache.PlayerCache;
 import com.example.volleybot.service.SendMessageService;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -9,26 +9,29 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 /**
  * Created by vkondratiev on 16.09.2021
  * Description:
+ * Бот запущен
  */
 @Component
-public class DefaultMessageHandler implements IMessageHandler {
+public class StartHandler implements IMessageHandler {
 
-    private final UserDataCache userDataCache;
+    private final PlayerCache playerCache;
     private final SendMessageService sendMessageService;
 
-    public DefaultMessageHandler(UserDataCache userDataCache, SendMessageService sendMessageService) {
-        this.userDataCache = userDataCache;
+    public StartHandler(PlayerCache playerCache, SendMessageService sendMessageService) {
+        this.playerCache = playerCache;
         this.sendMessageService = sendMessageService;
     }
 
     @Override
     public void handle(Message inMessage) {
-        userDataCache.setUserBotState(inMessage.getChatId(), BotState.DEFAULT);
-        sendMessageService.sendMessage(inMessage.getChatId(), "reply.default").run();
+        Long chatId = inMessage.getChatId();
+        playerCache.setUserBotState(chatId, BotState.AUTH);
+        sendMessageService.sendMessage(chatId, "start");
+        sendMessageService.log("action.start", "" + chatId);
     }
 
     @Override
     public BotState state() {
-        return BotState.DEFAULT;
+        return BotState.START;
     }
 }

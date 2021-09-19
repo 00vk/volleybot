@@ -2,7 +2,8 @@ package com.example.volleybot.service;
 
 import com.example.volleybot.botapi.BotState;
 import com.example.volleybot.botapi.BotStateContext;
-import com.example.volleybot.cache.UserDataCache;
+import com.example.volleybot.botapi.messagehandler.IMessageHandler;
+import com.example.volleybot.cache.PlayerCache;
 import com.example.volleybot.entity.Player;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
@@ -18,17 +19,17 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 public class UpdateService {
 
     private final BotStateContext stateContext;
-    private final UserDataCache userDataCache;
+    private final PlayerCache playerCache;
     private final PlayerService playerService;
     private final SendMessageService sendMessageService;
     private String token;
 
     public UpdateService(BotStateContext stateContext,
-                         UserDataCache userDataCache,
+                         PlayerCache playerCache,
                          PlayerService playerService,
                          SendMessageService sendMessageService) {
         this.stateContext = stateContext;
-        this.userDataCache = userDataCache;
+        this.playerCache = playerCache;
         this.playerService = playerService;
         this.sendMessageService = sendMessageService;
     }
@@ -43,16 +44,9 @@ public class UpdateService {
 
     private void handleIncomingMessage(Message inMessage) {
         long chatId = inMessage.getChatId();
-        Player player = playerService.findPlayer(chatId);
-        BotState botState;
-        if (player == null) {
-            botState = BotState.AUTH;
-        } else {
-            botState = BotState.DEFAULT;
-        }
-        userDataCache.setUserBotState(chatId, botState);
-        sendMessageService.log("action.authSuccess", "" + chatId);
-        stateContext.handler(botState).handle(inMessage);
+        BotState botState = playerCache.botState(chatId);
+        IMessageHandler handler = stateContext.handler(botState);
+        handler.handle(inMessage);
     }
 
     public void setToken(String token) {

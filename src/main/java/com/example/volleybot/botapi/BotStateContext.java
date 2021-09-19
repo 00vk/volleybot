@@ -18,6 +18,10 @@ public class BotStateContext {
 
     public BotStateContext(List<IMessageHandler> handlers) {
         handlers.forEach(handler -> this.handlers.put(handler.state(), handler));
+        for (BotState state : BotState.values()) {
+            if (!this.handlers.containsKey(state))
+                throw new IllegalStateException("Не определен хэндлер для состояния " + state);
+        }
     }
 
     public IMessageHandler handler(BotState state) {
