@@ -1,4 +1,4 @@
-package com.example.volleybot.entity;
+package com.example.volleybot.db.entity;
 
 import javax.persistence.*;
 
@@ -10,22 +10,19 @@ import javax.persistence.*;
 public class Player {
 
     @Id
-    @GeneratedValue
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @Column(nullable = false)
-    private Long chatId;
+    private String name;
 
     @Column(nullable = false)
-    private String name;
+    private boolean isAdmin;
 
     public Player() {
     }
 
-    public Player(Long chatId, String name) {
-        this.chatId = chatId;
-        this.name = name;
+    public Player(long chatId) {
+        this.id = chatId;
     }
 
     public Long getId() {
@@ -36,14 +33,6 @@ public class Player {
         this.id = id;
     }
 
-    public Long getChatId() {
-        return chatId;
-    }
-
-    public void setChatId(Long chatId) {
-        this.chatId = chatId;
-    }
-
     public String getName() {
         return name;
     }
@@ -52,12 +41,20 @@ public class Player {
         this.name = name;
     }
 
+    public boolean getIsAdmin() {
+        return isAdmin;
+    }
+
+    public void setAdmin(boolean admin) {
+        isAdmin = admin;
+    }
+
     @Override
     public String toString() {
         return "Player{" +
                 "id=" + id +
-                ", chatId=" + chatId +
                 ", name='" + name + '\'' +
+                ", isAdmin=" + isAdmin +
                 '}';
     }
 }

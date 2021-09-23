@@ -1,7 +1,6 @@
-package com.example.volleybot.controller;
+package com.example.volleybot.bot.controller;
 
-import com.example.volleybot.Volleybot;
-import org.springframework.stereotype.Controller;
+import com.example.volleybot.bot.Volleybot;
 import org.springframework.web.bind.annotation.*;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.Update;

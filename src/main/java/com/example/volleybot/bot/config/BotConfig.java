@@ -1,7 +1,8 @@
-package com.example.volleybot.config;
+package com.example.volleybot.bot.config;
 
-import com.example.volleybot.Volleybot;
-import com.example.volleybot.service.UpdateService;
+import com.example.volleybot.bot.Volleybot;
+import com.example.volleybot.bot.messagehandler.TimetableManager;
+import com.example.volleybot.bot.service.UpdateService;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.MessageSource;
@@ -24,9 +25,9 @@ public class BotConfig {
     private String token;
 
     @Bean
-    public Volleybot volleybot(UpdateService service) {
-        service.setToken(token);
-        return new Volleybot(username, webhookPath, token, service);
+    public Volleybot volleybot(UpdateService service,
+                               TimetableManager timetableManager) {
+        return new Volleybot(username, webhookPath, token, service, timetableManager);
     }
 
     @Bean
