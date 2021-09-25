@@ -3,6 +3,7 @@ package com.example.volleybot.db.service;
 import com.example.volleybot.db.entity.Player;
 import com.example.volleybot.db.repository.PlayerRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -20,14 +21,12 @@ public class PlayerService {
         this.repository = repository;
     }
 
+    @Transactional
     public List<Player> getAllPlayers() {
         return repository.findAll();
     }
 
-    public Player getById(Long chatId) {
-        return repository.getById(chatId);
-    }
-
+    @Transactional
     public void addNewPlayer(Long chatId, String playerName, boolean isAdmin) {
         Player player = new Player(chatId);
         player.setName(playerName);

@@ -6,6 +6,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import java.util.Objects;
 
 /**
  * Created by vkondratiev on 23.09.2021
@@ -35,6 +36,7 @@ public class Visit {
     public Visit(Player player, Timetable timetable) {
         this.player = player;
         this.timetable = timetable;
+        this.isActive = true;
     }
 
     public int getId() {
@@ -67,5 +69,23 @@ public class Visit {
 
     public void setActive(boolean active) {
         isActive = active;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Visit visit = (Visit) o;
+
+        if (!Objects.equals(timetable, visit.timetable)) return false;
+        return Objects.equals(player, visit.player);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = timetable != null ? timetable.hashCode() : 0;
+        result = 31 * result + (player != null ? player.hashCode() : 0);
+        return result;
     }
 }

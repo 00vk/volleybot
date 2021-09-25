@@ -104,4 +104,13 @@ public class Timetable implements Comparable<Timetable>{
         return gameDate != null ? gameDate.hashCode() : 0;
     }
 
+    @Override
+    public String toString() {
+        return "Timetable{" +
+                "id=" + id +
+                ", gameDate=" + gameDate +
+                ", playersLimit=" + playersLimit +
+                ", enabled=" + enabled +
+                '}';
+    }
 }

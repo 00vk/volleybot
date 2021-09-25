@@ -23,7 +23,6 @@ public class EnterNameHandler implements IUpdateHandler {
 
     private final PlayerCache playerCache;
     private final SendMessageService messageService;
-    private final MainHandler mainHandler;
     private final List<Long> admins = new ArrayList<>();
     @Value("${telegrambot.admin-list}")
     private String adminsValue;
@@ -33,7 +32,6 @@ public class EnterNameHandler implements IUpdateHandler {
                             MainHandler mainHandler) {
         this.playerCache = playerCache;
         this.messageService = messageService;
-        this.mainHandler = mainHandler;
     }
 
     @Override
@@ -49,12 +47,24 @@ public class EnterNameHandler implements IUpdateHandler {
             playerCache.setUserBotState(chatId, BotState.MAIN);
             playerCache.addNewPlayer(chatId, playerName, isAdmin);
             messageService.log(logText(chatId, playerName));
-            mainHandler.handleAnyMessage(chatId, isAdmin);
+            sendMainMessage(chatId, isAdmin);
         }
     }
 
     private String logText(Long chatId, String playerName) {
         return String.format("Зарегистрировался новый пользователь - %s (id%s)", playerName, chatId);
+    }
+
+    private void sendMainMessage(Long chatId, boolean isAdmin) {
+        messageService.sendMessage(chatId, null, getMainMessage(isAdmin));
+    }
+
+    private String getMainMessage(boolean isAdmin) {
+        return """
+                Доступные команды:
+                /visit - записаться на игру
+                /settings - настройки
+                """;
     }
 
     @PostConstruct

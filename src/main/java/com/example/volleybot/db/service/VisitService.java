@@ -3,6 +3,7 @@ package com.example.volleybot.db.service;
 import com.example.volleybot.db.entity.Visit;
 import com.example.volleybot.db.repository.VisitRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -19,14 +20,17 @@ public class VisitService {
         this.repository = repository;
     }
 
+    @Transactional
     public List<Visit> getAll() {
         return repository.findAll();
     }
 
+    @Transactional
     public void addNew(Visit visit) {
         repository.save(visit);
     }
 
+    @Transactional
     public void delete(Visit visit){
         repository.delete(visit);
     }

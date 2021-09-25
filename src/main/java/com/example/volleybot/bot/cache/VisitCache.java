@@ -37,25 +37,17 @@ public class VisitCache {
         for (Visit visit : allVisits) {
             Player player = visit.getPlayer();
             Timetable timetable = visit.getTimetable();
-            addVisit(visit, timetable, player);
+            Map<Player, Visit> dayVisits = getDayVisits(timetable);
+            dayVisits.put(player, visit);
         }
-    }
-
-    private void addVisit(Visit visit, Timetable timetable, Player player) {
-        Map<Player, Visit> dayVisits = getDayVisits(timetable);
-        dayVisits.put(player, visit);
-    }
-
-    private Map<Player, Visit> getDayVisits(Timetable timetable) {
-        visits.putIfAbsent(timetable, new HashMap<>());
-        return visits.get(timetable);
     }
 
     public void addVisit(long chatId, LocalDate date) {
         Player player = players.getPlayer(chatId);
         Timetable timetable = days.getTimetableByDate(date);
         Visit visit = new Visit(player, timetable);
-        addVisit(visit, timetable, player);
+        Map<Player, Visit> dayVisits = getDayVisits(timetable);
+        dayVisits.put(player, visit);
         sendMessageService.log(player.getName() + " записался на " + days.format(date));
         service.addNew(visit);
     }
@@ -63,15 +55,29 @@ public class VisitCache {
     public void removeVisit(long chatId, LocalDate date) {
         Player player = players.getPlayer(chatId);
         Timetable timetable = days.getTimetableByDate(date);
-        Visit visit = new Visit(player, timetable);
-        visits.get(timetable).remove(player);
-        sendMessageService.log(player.getName() + " записался на " + days.format(date));
+        Visit visit = getVisit(chatId, date);
+        getDayVisits(timetable).remove(player);
+        sendMessageService.log(player.getName() + " выписался с " + days.format(date));
         service.delete(visit);
+    }
+
+    public void switchVisitState(long chatId, LocalDate date) {
+        Visit visit = getVisit(chatId, date);
+        if (visit == null) {
+            addVisit(chatId, date);
+        } else {
+            removeVisit(chatId, date);
+        }
     }
 
     public Visit getVisit(long chatId, LocalDate date) {
         Player player = players.getPlayer(chatId);
         Timetable timetable = days.getTimetableByDate(date);
         return getDayVisits(timetable).get(player);
+    }
+
+    private Map<Player, Visit> getDayVisits(Timetable timetable) {
+        visits.putIfAbsent(timetable, new HashMap<>());
+        return visits.get(timetable);
     }
 }

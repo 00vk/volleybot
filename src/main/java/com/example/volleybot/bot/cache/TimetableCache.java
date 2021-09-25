@@ -11,6 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 @Component
 public class TimetableCache {
 
-    public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd MMMM");
+    public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd MM yyyy");
     private final TimetableService service;
     private final Map<LocalDate, Timetable> allDays;
     private final SendMessageService sendMessageService;
@@ -44,7 +45,7 @@ public class TimetableCache {
     public Set<LocalDate> getForwardDates() {
         return allDays.keySet().stream()
                       .filter(date -> date.isAfter(LocalDate.now()))
-                      .collect(Collectors.toSet());
+                      .collect(Collectors.toCollection(TreeSet::new));
     }
 
     public void disableDay(LocalDate date) {

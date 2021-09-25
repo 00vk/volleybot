@@ -53,15 +53,13 @@ public class MainHandler implements IUpdateHandler {
         if (isAdmin && "/checkdates" .equalsIgnoreCase(message.getText())) {
             timetableManager.manageDates();
         } else if ("/visit" .equalsIgnoreCase(message.getText())) {
-            // TODO: убрать зависимость
-            visitHandler.handleVisit(chatId);
+            visitHandler.handleVisitCommand(chatId);
         } else {
             handleAnyMessage(chatId, isAdmin);
         }
     }
 
-
-    public void handleAnyMessage(Long chatId, boolean isAdmin) {
+    private void handleAnyMessage(Long chatId, boolean isAdmin) {
         messageService.sendMessage(chatId, null, getMainMessage(isAdmin));
     }
 

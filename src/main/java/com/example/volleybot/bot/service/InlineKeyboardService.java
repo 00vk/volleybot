@@ -14,7 +14,7 @@ import java.util.List;
 @Service
 public class InlineKeyboardService {
 
-    public InlineKeyboardMarkup createKeyboard(int columns, List<String> buttonTexts) {
+    public InlineKeyboardMarkup createKeyboard(int columns, List<String> buttonTexts, List<String> callbackData) {
         List<List<InlineKeyboardButton>> buttons = new ArrayList<>();
         for (int i = 0; i < buttonTexts.size(); i++) {
             if (i % columns == 0) {
@@ -23,7 +23,7 @@ public class InlineKeyboardService {
             List<InlineKeyboardButton> row = buttons.get(buttons.size() - 1);
             InlineKeyboardButton button = new InlineKeyboardButton();
             button.setText(buttonTexts.get(i));
-            button.setCallbackData(buttonTexts.get(i));
+            button.setCallbackData(callbackData.get(i));
             row.add(button);
         }
         return new InlineKeyboardMarkup(buttons);

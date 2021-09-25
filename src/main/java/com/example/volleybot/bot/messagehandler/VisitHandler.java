@@ -14,10 +14,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * Created by vkondratiev on 24.09.2021
@@ -31,7 +29,6 @@ public class VisitHandler implements IUpdateHandler{
     private final PlayerCache playerCache;
     private final TimetableCache timetableCache;
     private final VisitCache visitCache;
-    private final Map<Long, Long> actualVisitMessageIds = new HashMap<>();
 
     public VisitHandler(SendMessageService messageService,
                         InlineKeyboardService keyboardService,
@@ -49,17 +46,33 @@ public class VisitHandler implements IUpdateHandler{
     public void handle(Update update) {
         CallbackQuery callback = update.getCallbackQuery();
         Long chatId = callback.getMessage().getChatId();
-        InlineKeyboardMarkup keyboard = callback.getMessage().getReplyMarkup();
-        keyboard.getKeyboard().get(0).get(0).setText("ха-ха");
-//        callback.getMessage().
-        messageService.editKeyboard(chatId, keyboard);
+        String data = callback.getData();
+        if ("/back".equals(data)) {
+            sendMainMessage(chatId, playerCache.isPlayerAdmin(chatId));
+            playerCache.setUserBotState(chatId, BotState.MAIN);
+        } else {
+            LocalDate date = timetableCache.parse(data);
+            visitCache.switchVisitState(chatId, date);
+            messageService.editKeyboard(chatId, getKeyboard(chatId));
+        }
     }
 
-    public void handleVisit(Long chatId) {
-        InlineKeyboardMarkup keyboard = keyboardService.createKeyboard(2, getVisitButtons(chatId));
-        messageService.sendMessage(chatId, keyboard, getVisitMessage());
+    public void handleVisitCommand(Long chatId) {
+        messageService.sendMessage(chatId, getKeyboard(chatId), getVisitMessage());
         messageService.log(playerCache.getPlayerName(chatId) + " выбирает дни для записи");
         playerCache.setUserBotState(chatId, BotState.VISIT);
+    }
+
+    private void sendMainMessage(Long chatId, boolean isAdmin) {
+        messageService.sendMessage(chatId, null, getMainMessage(isAdmin));
+    }
+
+    private String getMainMessage(boolean isAdmin) {
+        return """
+                Доступные команды:
+                /visit - записаться на игру
+                /settings - настройки
+                """;
     }
 
     @Override
@@ -68,19 +81,14 @@ public class VisitHandler implements IUpdateHandler{
     }
 
 
-    private String getVisitMessage() {
-        return """
-                Выбери дни для записи
-                ✅ - дни, на которые ты записан;
-                ⚠️ - дни, в которые ты на текущий момент в запасе.""";
-    }
-
-    private ArrayList<String> getVisitButtons(Long chatId) {
-        Set<String> buttonTexts = new TreeSet<>();
+    private InlineKeyboardMarkup getKeyboard(Long chatId) {
+        List<String> texts = new ArrayList<>();
+        List<String> callbackData = new ArrayList<>();
         Set<LocalDate> forwardDates = timetableCache.getForwardDates();
 
         for (LocalDate date : forwardDates) {
             String text = timetableCache.format(date);
+            callbackData.add(text);
             Visit visit = visitCache.getVisit(chatId, date);
             if (visit != null) {
                 if (visit.isActive()) {
@@ -89,11 +97,18 @@ public class VisitHandler implements IUpdateHandler{
                     text = "⚠️ " + text + " ⚠️";
                 }
             }
-            buttonTexts.add(text);
+            texts.add(text);
         }
-        buttonTexts.add("⏪ назад");
-
-        return new ArrayList<>(buttonTexts);
+        texts.add("⏪ назад");
+        callbackData.add("/back");
+        return keyboardService.createKeyboard(2, texts, callbackData);
     }
 
+    private String getVisitMessage() {
+        return """
+                Выбери дни для записи
+                ✅ - дни, на которые ты записан;
+                ⚠️ - дни, в которые ты на текущий момент в запасе.
+                """;
+    }
 }
