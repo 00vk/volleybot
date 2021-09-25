@@ -2,11 +2,14 @@ package com.example.volleybot.bot.cache;
 
 import com.example.volleybot.bot.BotState;
 import com.example.volleybot.db.entity.Player;
+import com.example.volleybot.db.entity.Visit;
 import com.example.volleybot.db.service.PlayerService;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Created by vkondratiev on 16.09.2021
@@ -33,12 +36,12 @@ public class PlayerCache {
     }
 
     public BotState botState(long chatId) {
-        Player player = safeGetPlayer(chatId);
+        Player player = getPlayer(chatId);
         playerBotStates.putIfAbsent(player, BotState.START);
         return playerBotStates.get(player);
     }
 
-    private Player safeGetPlayer(long chatId) {
+    Player getPlayer(long chatId) {
         players.putIfAbsent(chatId, new Player(chatId));
         return players.get(chatId);
     }
@@ -54,15 +57,21 @@ public class PlayerCache {
     }
 
     public boolean isPlayerAdmin(Long chatId) {
-        return safeGetPlayer(chatId).getIsAdmin();
+        return getPlayer(chatId).isAdmin();
     }
 
     public String getPlayerName(Long chatId) {
-        return safeGetPlayer(chatId).getName();
+        return getPlayer(chatId).getName();
     }
 
     public void addNewPlayer(Long chatId, String playerName, boolean isAdmin) {
         updatePlayer(chatId, playerName, isAdmin);
         service.addNewPlayer(chatId, playerName, isAdmin);
     }
+
+    public Set<Visit> getVisits(long chatId) {
+        Player player = getPlayer(chatId);
+        return new TreeSet<>(player.getVisits());
+    }
+
 }

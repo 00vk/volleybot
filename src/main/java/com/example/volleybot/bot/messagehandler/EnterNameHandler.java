@@ -3,7 +3,6 @@ package com.example.volleybot.bot.messagehandler;
 import com.example.volleybot.bot.BotState;
 import com.example.volleybot.bot.cache.PlayerCache;
 import com.example.volleybot.bot.service.SendMessageService;
-import com.example.volleybot.db.service.PlayerService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -23,15 +22,18 @@ import java.util.stream.Collectors;
 public class EnterNameHandler implements IUpdateHandler {
 
     private final PlayerCache playerCache;
-    private final SendMessageService sendMessageService;
+    private final SendMessageService messageService;
+    private final MainHandler mainHandler;
+    private final List<Long> admins = new ArrayList<>();
     @Value("${telegrambot.admin-list}")
     private String adminsValue;
-    private final List<Long> admins = new ArrayList<>();
 
     public EnterNameHandler(PlayerCache playerCache,
-                            SendMessageService sendMessageService) {
+                            SendMessageService messageService,
+                            MainHandler mainHandler) {
         this.playerCache = playerCache;
-        this.sendMessageService = sendMessageService;
+        this.messageService = messageService;
+        this.mainHandler = mainHandler;
     }
 
     @Override
@@ -46,18 +48,13 @@ public class EnterNameHandler implements IUpdateHandler {
             boolean isAdmin = admins.contains(chatId);
             playerCache.setUserBotState(chatId, BotState.MAIN);
             playerCache.addNewPlayer(chatId, playerName, isAdmin);
-            String msgMain = getString(isAdmin);
-            sendMessageService.sendMessage(chatId,null, msgMain);
-            sendMessageService.log(logText(chatId, playerName));
+            messageService.log(logText(chatId, playerName));
+            mainHandler.handleAnyMessage(chatId, isAdmin);
         }
     }
 
     private String logText(Long chatId, String playerName) {
         return String.format("Зарегистрировался новый пользователь - %s (id%s)", playerName, chatId);
-    }
-
-    private String getString(boolean isAdmin) {
-        return "Доступные команды:\n/go - записаться на игру\n/cancel - отменить запись\n/settings - настройки";
     }
 
     @PostConstruct
@@ -72,6 +69,6 @@ public class EnterNameHandler implements IUpdateHandler {
 
     @Override
     public BotState state() {
-        return BotState.AUTH_SUCCESS;
+        return BotState.NAME;
     }
 }

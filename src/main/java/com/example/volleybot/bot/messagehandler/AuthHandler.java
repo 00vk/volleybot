@@ -39,7 +39,7 @@ public class AuthHandler implements IUpdateHandler {
         if (message.hasText()) {
             String password = message.getText();
             if (PASS.equalsIgnoreCase(password)) {
-                playerCache.setUserBotState(chatId, BotState.AUTH_SUCCESS);
+                playerCache.setUserBotState(chatId, BotState.NAME);
                 sendMessageService.sendMessage(chatId,  null, msgGetName());
                 sendMessageService.log(logAuthSuccess(chatId, name));
             } else {

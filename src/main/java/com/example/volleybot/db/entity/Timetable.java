@@ -1,11 +1,15 @@
 package com.example.volleybot.db.entity;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import java.time.LocalDate;
+import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Created by vkondratiev on 19.09.2021
@@ -27,6 +31,9 @@ public class Timetable implements Comparable<Timetable>{
 
     @Column(nullable = false)
     private boolean enabled;
+
+    @OneToMany(targetEntity = Visit.class, mappedBy = "timetable", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Visit> visits = new LinkedHashSet<>();
 
     public Timetable(LocalDate gameDate) {
         this.gameDate = gameDate;
@@ -69,14 +76,12 @@ public class Timetable implements Comparable<Timetable>{
         this.enabled = enabled;
     }
 
-    @Override
-    public String toString() {
-        return "Timetable{" +
-                "id=" + id +
-                ", gameDate=" + gameDate +
-                ", playersLimit=" + playersLimit +
-                ", enabled=" + enabled +
-                '}';
+    public Set<Visit> getVisits() {
+        return visits;
+    }
+
+    public void setVisits(Set<Visit> visits) {
+        this.visits = visits;
     }
 
     @Override
@@ -98,4 +103,5 @@ public class Timetable implements Comparable<Timetable>{
     public int hashCode() {
         return gameDate != null ? gameDate.hashCode() : 0;
     }
+
 }

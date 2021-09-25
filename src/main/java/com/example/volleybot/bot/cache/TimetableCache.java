@@ -1,12 +1,16 @@
 package com.example.volleybot.bot.cache;
 
+import com.example.volleybot.bot.service.SendMessageService;
 import com.example.volleybot.db.entity.Timetable;
+import com.example.volleybot.db.entity.Visit;
 import com.example.volleybot.db.service.TimetableService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
@@ -16,13 +20,16 @@ import java.util.stream.Collectors;
 @Component
 public class TimetableCache {
 
+    public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd MMMM");
     private final TimetableService service;
     private final Map<LocalDate, Timetable> allDays;
+    private final SendMessageService sendMessageService;
 
-    public TimetableCache(TimetableService service) {
+    public TimetableCache(TimetableService service, SendMessageService sendMessageService) {
         this.service = service;
+        this.sendMessageService = sendMessageService;
         allDays = service.getAllDays().stream()
-                         .collect(Collectors.toConcurrentMap(Timetable::getGameDate, t -> t, (t1, t2) -> t2));
+                         .collect(Collectors.toMap(Timetable::getGameDate, t -> t, (t1, t2) -> t2, TreeMap::new));
 
     }
 
@@ -41,6 +48,7 @@ public class TimetableCache {
     }
 
     public void disableDay(LocalDate date) {
+        sendMessageService.log("Дата " + format(date) + " убрана из доступа");
         allDays.putIfAbsent(date, new Timetable(date));
         Timetable timetable = allDays.get(date);
         timetable.setEnabled(false);
@@ -50,6 +58,23 @@ public class TimetableCache {
     public void addNewDate(LocalDate date) {
         allDays.putIfAbsent(date, new Timetable(date));
         Timetable timetable = allDays.get(date);
+        sendMessageService.log("Добавлена новая дата: " + format(date));
         service.save(timetable);
+    }
+
+    Timetable getTimetableByDate(LocalDate date) {
+        return allDays.get(date);
+    }
+
+    public Set<Visit> getVisits(LocalDate date) {
+        return getTimetableByDate(date).getVisits();
+    }
+
+    public String format(LocalDate date) {
+        return FORMATTER.format(date);
+    }
+
+    public LocalDate parse(String dateString) {
+        return LocalDate.parse(dateString, FORMATTER);
     }
 }

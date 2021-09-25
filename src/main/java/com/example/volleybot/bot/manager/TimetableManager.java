@@ -1,12 +1,12 @@
-package com.example.volleybot.bot.messagehandler;
+package com.example.volleybot.bot.manager;
 
 import com.example.volleybot.bot.cache.TimetableCache;
 import com.example.volleybot.bot.service.SendMessageService;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.HashSet;
 import java.util.Set;
@@ -18,7 +18,6 @@ import java.util.Set;
 @Component
 public class TimetableManager {
 
-    public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private final SendMessageService sendMessageService;
     private final TimetableCache timetableCache;
 
@@ -28,30 +27,31 @@ public class TimetableManager {
     }
 
     public void manageDates() {
-        sendMessageService.log("Настройка дат");
+        sendMessageService.log("Выполняется настройка дат");
+        addNewDays();
+        disableOldDays();
+    }
+
+    private void disableOldDays() {
         Set<LocalDate> oldDates = timetableCache.getOldEnabledDates();
         for (LocalDate date : oldDates) {
-            disableDate(date);
+            timetableCache.disableDay(date);
         }
+    }
 
+    private void addNewDays() {
         Set<LocalDate> forwardDays = timetableCache.getForwardDates();
         for (LocalDate nextMonday : nextMondays()) {
             if (forwardDays.contains(nextMonday))
                 continue;
-            addNewDate(nextMonday);
+            timetableCache.addNewDate(nextMonday);
         }
     }
 
-    private void addNewDate(LocalDate date) {
-        String dateText = date.format(FORMATTER);
-        sendMessageService.log("Добавлена новая дата: " + dateText);
-        timetableCache.addNewDate(date);
-    }
-
-    public void disableDate(LocalDate date) {
-        String dateText = date.format(FORMATTER);
-        sendMessageService.log("Дата " + dateText + " убрана из доступа");
-        timetableCache.disableDay(date);
+    @Scheduled(cron = "0 0 19 ? * MON") // 19:00:00; ANY<day-of-month>; EVERY<month>; on Mondays
+    private void manageOnMondays() {
+        manageDates();
+        timetableCache.disableDay(LocalDate.now());
     }
 
     private Set<LocalDate> nextMondays() {

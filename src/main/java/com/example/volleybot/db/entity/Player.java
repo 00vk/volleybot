@@ -1,6 +1,12 @@
 package com.example.volleybot.db.entity;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * Created by vkondratiev on 10.09.2021
@@ -17,6 +23,9 @@ public class Player {
 
     @Column(nullable = false)
     private boolean isAdmin;
+
+    @OneToMany(targetEntity = Visit.class, mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Visit> visits = new LinkedHashSet<>();
 
     public Player() {
     }
@@ -41,12 +50,20 @@ public class Player {
         this.name = name;
     }
 
-    public boolean getIsAdmin() {
+    public boolean isAdmin() {
         return isAdmin;
     }
 
     public void setAdmin(boolean admin) {
         isAdmin = admin;
+    }
+
+    public Set<Visit> getVisits() {
+        return visits;
+    }
+
+    public void setVisits(Set<Visit> visits) {
+        this.visits = visits;
     }
 
     @Override

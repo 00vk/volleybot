@@ -32,6 +32,7 @@ public class UpdateService {
     public void handleUpdate(Update update) {
         logUpdate(update);
         long chatId;
+        // TODO: обработака сообщений из общего чата
         if (update.hasMessage()) {
             chatId = update.getMessage().getChatId();
         } else if (update.hasCallbackQuery()) {
@@ -53,16 +54,16 @@ public class UpdateService {
         if (update.hasMessage()) {
             message = update.getMessage();
             author = message.getFrom();
+            text = message.getText();
         } else if (update.hasCallbackQuery()) {
             CallbackQuery callbackQuery = update.getCallbackQuery();
             author = callbackQuery.getFrom();
-            message = callbackQuery.getMessage();
+            text = callbackQuery.getData();
         } else {
             return;
         }
 
         chatId = author.getId();
-        text = message.getText();
         String name = playerCache.getPlayerName(chatId);
         if (name == null)
             name = author.getFirstName() + " " + author.getLastName();
@@ -71,6 +72,6 @@ public class UpdateService {
     }
 
     private String logText(String name, String text) {
-        return String.format("*** %s: %s ***", name, text);
+        return "*** " + name + ": " + text + " ***";
     }
 }

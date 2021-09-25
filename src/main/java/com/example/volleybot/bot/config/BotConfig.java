@@ -1,7 +1,7 @@
 package com.example.volleybot.bot.config;
 
 import com.example.volleybot.bot.Volleybot;
-import com.example.volleybot.bot.messagehandler.TimetableManager;
+import com.example.volleybot.bot.manager.TimetableManager;
 import com.example.volleybot.bot.service.UpdateService;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

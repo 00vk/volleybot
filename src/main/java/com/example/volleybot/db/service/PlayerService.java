@@ -24,6 +24,10 @@ public class PlayerService {
         return repository.findAll();
     }
 
+    public Player getById(Long chatId) {
+        return repository.getById(chatId);
+    }
+
     public void addNewPlayer(Long chatId, String playerName, boolean isAdmin) {
         Player player = new Player(chatId);
         player.setName(playerName);

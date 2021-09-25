@@ -24,13 +24,31 @@ public class SendMessageService {
     private String TOKEN;
     @Value("${telegrambot.log-chat-id}")
     private long LOG_CHAT_ID;
+    // TODO: TARGET_CHAT_ID
+    private final Map<Long, Integer> messageIds = new HashMap<>();
 
     public void sendMessage(long chatId, InlineKeyboardMarkup keyboard, String msgText) {
         Runnable runnable = () -> {
             HttpEntity<Map<String, Object>> replyRequest;
-            replyRequest = new HttpEntity<>(requestBody(chatId, msgText, keyboard), headers());
+            replyRequest = new HttpEntity<>(sendMessageRequest(chatId, msgText, keyboard), headers());
             try {
                 URI url = new URI("https://api.telegram.org/bot" + TOKEN + "/sendMessage");
+                Map<String, Object> message = rest.postForObject(url, replyRequest, Map.class);
+                int messageId = (Integer) ((Map<String, Object>) message.get("result")).get("message_id");
+                messageIds.put(chatId, messageId);
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+            }
+        };
+        runnable.run();
+    }
+
+    public void editKeyboard(long chatId, InlineKeyboardMarkup keyboard) {
+        Runnable runnable = () -> {
+            HttpEntity<Map<String, Object>> replyRequest;
+            replyRequest = new HttpEntity<>(editKeyboardRequest(chatId, messageIds.get(chatId), keyboard), headers());
+            try {
+                URI url = new URI("https://api.telegram.org/bot" + TOKEN + "/editMessageReplyMarkup");
                 rest.postForLocation(url, replyRequest);
             } catch (URISyntaxException e) {
                 e.printStackTrace();
@@ -43,10 +61,20 @@ public class SendMessageService {
         sendMessage(LOG_CHAT_ID, null, msgText);
     }
 
-    private Map<String, Object> requestBody(long chatId, String text, InlineKeyboardMarkup keyboard) {
+    private Map<String, Object> sendMessageRequest(long chatId, String text, InlineKeyboardMarkup keyboard) {
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("chat_id", chatId);
         requestBody.put("text", text);
+        if (keyboard != null) {
+            requestBody.put("reply_markup", keyboard);
+        }
+        return requestBody;
+    }
+
+    private Map<String, Object> editKeyboardRequest(long chatId, long messageId, InlineKeyboardMarkup keyboard) {
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("chat_id", chatId);
+        requestBody.put("message_id", messageId);
         if (keyboard != null) {
             requestBody.put("reply_markup", keyboard);
         }
@@ -58,5 +86,10 @@ public class SendMessageService {
         headers.add("accept", "application/json");
         headers.add("Content-Type", "application/json");
         return headers;
+    }
+
+    public void logMock() {
+        StackTraceElement invoker = Thread.currentThread().getStackTrace()[2];
+        sendMessage(LOG_CHAT_ID, null, invoker.getClassName() + "#" + invoker.getMethodName() + "(): не реализовано");
     }
 }
