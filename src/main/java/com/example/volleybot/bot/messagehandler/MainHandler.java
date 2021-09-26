@@ -48,14 +48,26 @@ public class MainHandler implements IUpdateHandler {
             return;
         }
         Message message = update.getMessage();
-        Long chatId = message.getChatId();
-        boolean isAdmin = playerCache.isPlayerAdmin(chatId);
-        if (isAdmin && "/checkdates" .equalsIgnoreCase(message.getText())) {
+        Long userId = message.getFrom().getId();
+        boolean isAdmin = playerCache.isPlayerAdmin(userId);
+        String messageText = message.getText();
+        String command = messageText.split("[ @]")[0];
+        if (isAdmin && "/checkdates" .equalsIgnoreCase(command)) {
             timetableManager.manageDates();
-        } else if ("/visit" .equalsIgnoreCase(message.getText())) {
-            visitHandler.handleVisitCommand(chatId);
+        } else if ("/visit" .equalsIgnoreCase(command)) {
+            visitHandler.handleVisitCommand(userId);
+        } else if (isAdmin && "/pin" .equalsIgnoreCase(command)) {
+            timetableManager.managePinnedMessage();
         } else {
-            handleAnyMessage(chatId, isAdmin);
+            handleAnyMessage(userId, isAdmin);
+        }
+    }
+
+    private void sleep() {
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 

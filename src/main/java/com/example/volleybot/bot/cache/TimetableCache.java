@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -50,15 +51,13 @@ public class TimetableCache {
 
     public void disableDay(LocalDate date) {
         sendMessageService.log("Дата " + format(date) + " убрана из доступа");
-        allDays.putIfAbsent(date, new Timetable(date));
-        Timetable timetable = allDays.get(date);
+        Timetable timetable = getTimetable(date);
         timetable.setEnabled(false);
         service.save(timetable);
     }
 
     public void addNewDate(LocalDate date) {
-        allDays.putIfAbsent(date, new Timetable(date));
-        Timetable timetable = allDays.get(date);
+        Timetable timetable = getTimetable(date);
         sendMessageService.log("Добавлена новая дата: " + format(date));
         service.save(timetable);
     }
@@ -67,8 +66,9 @@ public class TimetableCache {
         return allDays.get(date);
     }
 
-    public Set<Visit> getVisits(LocalDate date) {
-        return getTimetableByDate(date).getVisits();
+    private Timetable getTimetable(LocalDate date) {
+        allDays.putIfAbsent(date, new Timetable(date));
+        return allDays.get(date);
     }
 
     public String format(LocalDate date) {

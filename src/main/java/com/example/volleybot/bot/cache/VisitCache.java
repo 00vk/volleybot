@@ -8,9 +8,11 @@ import com.example.volleybot.db.service.VisitService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 /**
  * Created by vkondratiev on 23.09.2021
@@ -28,7 +30,7 @@ public class VisitCache {
     public VisitCache(PlayerCache players,
                       TimetableCache days,
                       VisitService service,
-    SendMessageService sendMessageService) {
+                      SendMessageService sendMessageService) {
         this.players = players;
         this.days = days;
         this.service = service;
@@ -79,5 +81,30 @@ public class VisitCache {
     private Map<Player, Visit> getDayVisits(Timetable timetable) {
         visits.putIfAbsent(timetable, new HashMap<>());
         return visits.get(timetable);
+    }
+
+    public String listedPlayersOf(LocalDate date) {
+        Timetable timetable = days.getTimetableByDate(date);
+        Map<Player, Visit> players = visits.getOrDefault(timetable, new HashMap<>());
+        Map<Boolean, List<String>> splitByActivityStatus = new HashMap<>();
+        splitByActivityStatus.put(true, new ArrayList<>());
+        splitByActivityStatus.put(false, new ArrayList<>());
+        for (Map.Entry<Player, Visit> player : players.entrySet()) {
+            Visit visit = player.getValue();
+            splitByActivityStatus.get(visit.isActive()).add(player.getKey().getName());
+        }
+
+        int i = 0;
+        StringJoiner joiner = new StringJoiner("\n");
+        for (String player : splitByActivityStatus.get(true)) {
+            joiner.add(++i + ". " + player);
+        }
+        if (!splitByActivityStatus.get(false).isEmpty())
+            joiner.add("----------------------------").add("Запасные:");
+        for (String player : splitByActivityStatus.get(false)) {
+            joiner.add(++i + ". " + player);
+        }
+
+        return joiner.toString();
     }
 }

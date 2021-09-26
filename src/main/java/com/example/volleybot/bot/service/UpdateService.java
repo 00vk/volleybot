@@ -30,17 +30,19 @@ public class UpdateService {
     }
 
     public void handleUpdate(Update update) {
-        logUpdate(update);
-        long chatId;
-        // TODO: обработака сообщений из общего чата
+        long fromId;
         if (update.hasMessage()) {
-            chatId = update.getMessage().getChatId();
+            User from = update.getMessage().getFrom();
+            if (from.getIsBot())
+                return;
+            fromId = from.getId();
         } else if (update.hasCallbackQuery()) {
-            chatId = update.getCallbackQuery().getFrom().getId();
+            fromId = update.getCallbackQuery().getFrom().getId();
         } else {
             return;
         }
-        BotState botState = playerCache.botState(chatId);
+        logUpdate(update);
+        BotState botState = playerCache.botState(fromId);
         IUpdateHandler handler = stateContext.handler(botState);
         handler.handle(update);
     }

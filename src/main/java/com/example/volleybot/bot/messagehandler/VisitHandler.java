@@ -44,17 +44,29 @@ public class VisitHandler implements IUpdateHandler{
 
     @Override
     public void handle(Update update) {
+        if (!update.hasCallbackQuery()) {
+            if (!update.hasMessage())
+                return;
+            Long fromId = update.getMessage().getFrom().getId();
+            backToMainMenu(fromId);
+            return;
+        }
+
         CallbackQuery callback = update.getCallbackQuery();
         Long chatId = callback.getMessage().getChatId();
         String data = callback.getData();
         if ("/back".equals(data)) {
-            sendMainMessage(chatId, playerCache.isPlayerAdmin(chatId));
-            playerCache.setUserBotState(chatId, BotState.MAIN);
+            backToMainMenu(chatId);
         } else {
             LocalDate date = timetableCache.parse(data);
             visitCache.switchVisitState(chatId, date);
             messageService.editKeyboard(chatId, getKeyboard(chatId));
         }
+    }
+
+    private void backToMainMenu(Long chatId) {
+        sendMainMessage(chatId, playerCache.isPlayerAdmin(chatId));
+        playerCache.setUserBotState(chatId, BotState.MAIN);
     }
 
     public void handleVisitCommand(Long chatId) {
