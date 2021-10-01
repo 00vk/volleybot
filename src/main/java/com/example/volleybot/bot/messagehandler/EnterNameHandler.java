@@ -40,19 +40,19 @@ public class EnterNameHandler implements IUpdateHandler {
             return;
         }
         Message message = update.getMessage();
-        Long chatId = message.getChatId();
+        Long fromId = message.getFrom().getId();
         if (message.hasText()) {
             String playerName = message.getText();
-            boolean isAdmin = admins.contains(chatId);
-            playerCache.setUserBotState(chatId, BotState.MAIN);
-            playerCache.addNewPlayer(chatId, playerName, isAdmin);
-            messageService.log(logText(chatId, playerName));
-            sendMainMessage(chatId, isAdmin);
+            boolean isAdmin = admins.contains(fromId);
+            playerCache.setUserBotState(fromId, BotState.MAIN);
+            playerCache.addNewPlayer(fromId, playerName, isAdmin);
+            messageService.log(logText(fromId, playerName));
+            sendMainMessage(fromId, isAdmin);
         }
     }
 
-    private String logText(Long chatId, String playerName) {
-        return String.format("Зарегистрировался новый пользователь - %s (id%s)", playerName, chatId);
+    private String logText(Long id, String name) {
+        return "Зарегистрировался новый пользователь - " + name + " (id" + id + ")";
     }
 
     private void sendMainMessage(Long chatId, boolean isAdmin) {

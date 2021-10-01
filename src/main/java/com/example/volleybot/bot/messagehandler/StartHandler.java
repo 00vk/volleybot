@@ -30,21 +30,21 @@ public class StartHandler implements IUpdateHandler {
             return;
         }
         Message message = update.getMessage();
-        Long chatId = message.getChatId();
         User author = message.getFrom();
+        Long authorId = author.getId();
         String telegramName = author.getFirstName() + " " + author.getLastName();
-        playerCache.setUserBotState(chatId, BotState.AUTH);
-        playerCache.updatePlayer(chatId, telegramName);
-        sendMessageService.sendMessage(chatId, null, msgStart());
-        sendMessageService.log(logText(chatId, telegramName));
+        playerCache.setUserBotState(authorId, BotState.AUTH);
+        playerCache.updatePlayer(authorId, telegramName);
+        sendMessageService.sendMessage(authorId, null, msgStart());
+        sendMessageService.log(logText(authorId, telegramName));
     }
 
     private String msgStart() {
         return "Привет! Чтобы продолжить, требуется авторизоваться. Введи пароль от эталона.";
     }
 
-    private String logText(Long chatId, String telegramName) {
-        return String.format("%s (id%s) запустил бота", telegramName, chatId);
+    private String logText(Long id, String telegramName) {
+        return telegramName + " (id" + id + ") запустил бота";
     }
 
     @Override

@@ -2,10 +2,7 @@ package com.example.volleybot.bot.messagehandler;
 
 import com.example.volleybot.bot.BotState;
 import com.example.volleybot.bot.cache.PlayerCache;
-import com.example.volleybot.bot.cache.TimetableCache;
-import com.example.volleybot.bot.cache.VisitCache;
 import com.example.volleybot.bot.manager.TimetableManager;
-import com.example.volleybot.bot.service.InlineKeyboardService;
 import com.example.volleybot.bot.service.SendMessageService;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -21,25 +18,19 @@ public class MainHandler implements IUpdateHandler {
     private final TimetableManager timetableManager;
     private final VisitHandler visitHandler;
     private final PlayerCache playerCache;
-    private final TimetableCache timetableCache;
-    private final VisitCache visitCache;
-    private final InlineKeyboardService keyboardService;
     private final SendMessageService messageService;
+    private final RecordHandler recordHandler;
 
     public MainHandler(TimetableManager timetableManager,
-                       VisitHandler visitHandler,
                        PlayerCache playerCache,
-                       TimetableCache timetableCache,
-                       VisitCache visitCache,
-                       InlineKeyboardService keyboardService,
-                       SendMessageService messageService) {
+                       SendMessageService messageService,
+                       VisitHandler visitHandler,
+                       RecordHandler recordHandler) {
         this.timetableManager = timetableManager;
         this.visitHandler = visitHandler;
         this.playerCache = playerCache;
-        this.timetableCache = timetableCache;
-        this.visitCache = visitCache;
-        this.keyboardService = keyboardService;
         this.messageService = messageService;
+        this.recordHandler = recordHandler;
     }
 
     @Override
@@ -51,28 +42,39 @@ public class MainHandler implements IUpdateHandler {
         Long userId = message.getFrom().getId();
         boolean isAdmin = playerCache.isPlayerAdmin(userId);
         String messageText = message.getText();
-        String command = messageText.split("[ @]")[0];
-        if (isAdmin && "/checkdates" .equalsIgnoreCase(command)) {
+        String[] split = messageText.split("[ @]");
+        String command = split[0];
+        if (isAdmin && "/checkdates".equalsIgnoreCase(command)) {
             timetableManager.manageDates();
-        } else if ("/visit" .equalsIgnoreCase(command)) {
+        } else if ("/visit".equalsIgnoreCase(command)) {
             visitHandler.handleVisitCommand(userId);
-        } else if (isAdmin && "/pin" .equalsIgnoreCase(command)) {
+        } else if (isAdmin && "/pin".equalsIgnoreCase(command)) {
             timetableManager.managePinnedMessage();
+        } else if (isAdmin && "/addNewPlayer".equalsIgnoreCase(command)) {
+            addNewPlayer(userId, split);
+        } else if (isAdmin && "/record".equalsIgnoreCase(command)) {
+            recordHandler.handleRecord(userId);
         } else {
             handleAnyMessage(userId, isAdmin);
         }
     }
 
-    private void sleep() {
+    private void addNewPlayer(long adminId, String[] split) {
+        if (split.length < 3) return;
+        long userId;
         try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            userId = Long.parseLong(split[1]);
+        } catch (NumberFormatException e) {
+            messageService.log("ОШИБКА! Невозможно добавить пользователя - некорректный user_id: " + split[1]);
+            return;
         }
+        String admin = playerCache.getPlayerName(adminId);
+        playerCache.addNewPlayer(userId, split[2], false);
+        messageService.log(admin + " добавил нового пользователя: " + split[2] + " (id" + userId + ")");
     }
 
-    private void handleAnyMessage(Long chatId, boolean isAdmin) {
-        messageService.sendMessage(chatId, null, getMainMessage(isAdmin));
+    private void handleAnyMessage(Long id, boolean isAdmin) {
+        messageService.sendMessage(id, null, getMainMessage(isAdmin));
     }
 
     private String getMainMessage(boolean isAdmin) {

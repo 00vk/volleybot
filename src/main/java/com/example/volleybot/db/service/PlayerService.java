@@ -27,8 +27,8 @@ public class PlayerService {
     }
 
     @Transactional
-    public void addNewPlayer(Long chatId, String playerName, boolean isAdmin) {
-        Player player = new Player(chatId);
+    public void addNewPlayer(Long id, String playerName, boolean isAdmin) {
+        Player player = new Player(id);
         player.setName(playerName);
         player.setAdmin(isAdmin);
         repository.save(player);

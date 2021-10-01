@@ -30,8 +30,8 @@ public class AuthHandler implements IUpdateHandler {
             return;
         }
         Message message = update.getMessage();
-        Long chatId = message.getChatId();
-        String name = playerCache.getPlayerName(chatId);
+        Long fromId = message.getFrom().getId();
+        String name = playerCache.getPlayerName(fromId);
         if (name == null) {
             User author = message.getFrom();
             name = author.getFirstName() + " " + author.getLastName();
@@ -39,12 +39,12 @@ public class AuthHandler implements IUpdateHandler {
         if (message.hasText()) {
             String password = message.getText();
             if (PASS.equalsIgnoreCase(password)) {
-                playerCache.setUserBotState(chatId, BotState.NAME);
-                sendMessageService.sendMessage(chatId,  null, msgGetName());
-                sendMessageService.log(logAuthSuccess(chatId, name));
+                playerCache.setUserBotState(fromId, BotState.NAME);
+                sendMessageService.sendMessage(fromId,  null, msgGetName());
+                sendMessageService.log(logAuthSuccess(fromId, name));
             } else {
-                sendMessageService.sendMessage(chatId, null, msgGetPass());
-                sendMessageService.log(logAuthFailed(chatId, name));
+                sendMessageService.sendMessage(fromId, null, msgGetPass());
+                sendMessageService.log(logAuthFailed(fromId, name));
             }
         }
     }
@@ -53,12 +53,12 @@ public class AuthHandler implements IUpdateHandler {
         return "Для продолжения требуется ввести пароль от эталона";
     }
 
-    private String logAuthSuccess(Long chatId, String username) {
-        return username + " (id" + chatId + ") успешно авторизовался";
+    private String logAuthSuccess(Long id, String name) {
+        return name + " (id" + id + ") успешно авторизовался";
     }
 
-    private String logAuthFailed(Long chatId, String username) {
-        return username + " (id" + chatId + ") ввел неверный пароль";
+    private String logAuthFailed(Long id, String name) {
+        return name + " (id" + id + ") ввел неверный пароль";
     }
 
     private String msgGetName() {

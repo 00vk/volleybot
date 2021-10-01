@@ -71,7 +71,7 @@ public class TimetableManager {
     }
 
     private String pinnedMessageText(LocalDate nextMonday) {
-        String dateText = timetable.format(nextMonday);
+        String dateText = timetable.toText(nextMonday);
         return "\uD83C\uDFD0 " + dateText + " \uD83C\uDFD0:\n" + visits.listedPlayersOf(nextMonday);
     }
 

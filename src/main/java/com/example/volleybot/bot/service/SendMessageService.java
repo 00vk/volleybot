@@ -94,6 +94,20 @@ public class SendMessageService {
         runnable.run();
     }
 
+    public void sendVoice(long chatId) {
+        Runnable runnable = () -> {
+            HttpEntity<Map<String, Object>> sendVoiceRequest;
+            sendVoiceRequest = new HttpEntity<>(sendVoiceRequest(chatId), headers());
+            try {
+                URI url = new URI("https://api.telegram.org/bot" + TOKEN + "/sendVoice");
+//                rest.postForLocation(url, sendVoiceRequest);
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+            }
+        };
+        runnable.run();
+    }
+
     private void unpinPreviousVisitMessage() {
         if (pinnedMessageId == null)
             return;
@@ -139,6 +153,13 @@ public class SendMessageService {
         if (keyboard != null) {
             requestBody.put("reply_markup", keyboard);
         }
+        return requestBody;
+    }
+
+    private Map<String, Object> sendVoiceRequest(long chatId) {
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("chat_id", chatId);
+        requestBody.put("voice", "AgADdhkAAqTciUo");
         return requestBody;
     }
 

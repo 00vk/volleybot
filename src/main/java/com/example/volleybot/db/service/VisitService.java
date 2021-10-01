@@ -26,7 +26,7 @@ public class VisitService {
     }
 
     @Transactional
-    public void addNew(Visit visit) {
+    public void save(Visit visit) {
         repository.save(visit);
     }
 
@@ -34,4 +34,5 @@ public class VisitService {
     public void delete(Visit visit){
         repository.delete(visit);
     }
+
 }

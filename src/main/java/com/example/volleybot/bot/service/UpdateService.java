@@ -33,7 +33,7 @@ public class UpdateService {
         long fromId;
         if (update.hasMessage()) {
             User from = update.getMessage().getFrom();
-            if (from.getIsBot())
+            if (from.getIsBot() || !update.getMessage().hasText())
                 return;
             fromId = from.getId();
         } else if (update.hasCallbackQuery()) {
@@ -48,7 +48,7 @@ public class UpdateService {
     }
 
     private void logUpdate(Update update) {
-        long chatId;
+        long fromId;
         String text;
         User author;
         Message message;
@@ -65,8 +65,8 @@ public class UpdateService {
             return;
         }
 
-        chatId = author.getId();
-        String name = playerCache.getPlayerName(chatId);
+        fromId = author.getId();
+        String name = playerCache.getPlayerName(fromId);
         if (name == null)
             name = author.getFirstName() + " " + author.getLastName();
         String logText = logText(name, text);

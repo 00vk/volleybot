@@ -25,62 +25,44 @@ public class VisitCache {
     private final PlayerCache players;
     private final TimetableCache days;
     private final VisitService service;
-    private final SendMessageService sendMessageService;
+    private final SendMessageService messageService;
 
     public VisitCache(PlayerCache players,
                       TimetableCache days,
                       VisitService service,
-                      SendMessageService sendMessageService) {
+                      SendMessageService messageService) {
         this.players = players;
         this.days = days;
         this.service = service;
-        this.sendMessageService = sendMessageService;
-        List<Visit> allVisits = this.service.getAll();
-        for (Visit visit : allVisits) {
-            Player player = visit.getPlayer();
-            Timetable timetable = visit.getTimetable();
-            Map<Player, Visit> dayVisits = getDayVisits(timetable);
-            dayVisits.put(player, visit);
-        }
+        this.messageService = messageService;
+        fillVisits();
     }
 
-    public void addVisit(long chatId, LocalDate date) {
-        Player player = players.getPlayer(chatId);
+    public void switchVisitState(long playerId, LocalDate date) {
+        Player player = players.getPlayer(playerId);
         Timetable timetable = days.getTimetableByDate(date);
-        Visit visit = new Visit(player, timetable);
         Map<Player, Visit> dayVisits = getDayVisits(timetable);
-        dayVisits.put(player, visit);
-        sendMessageService.log(player.getName() + " записался на " + days.format(date));
-        service.addNew(visit);
-    }
-
-    public void removeVisit(long chatId, LocalDate date) {
-        Player player = players.getPlayer(chatId);
-        Timetable timetable = days.getTimetableByDate(date);
-        Visit visit = getVisit(chatId, date);
-        getDayVisits(timetable).remove(player);
-        sendMessageService.log(player.getName() + " выписался с " + days.format(date));
-        service.delete(visit);
-    }
-
-    public void switchVisitState(long chatId, LocalDate date) {
-        Visit visit = getVisit(chatId, date);
+        Visit visit = getVisit(playerId, date);
         if (visit == null) {
-            addVisit(chatId, date);
+            Visit visit1 = new Visit(player, timetable);
+            dayVisits.put(player, visit1);
+            messageService.log(player.getName() + " записался на " + days.toText(date));
+            service.save(visit1);
         } else {
-            removeVisit(chatId, date);
+            dayVisits.remove(player);
+            messageService.log(player.getName() + " выписался с " + days.toText(date));
+            service.delete(visit);
         }
     }
 
-    public Visit getVisit(long chatId, LocalDate date) {
-        Player player = players.getPlayer(chatId);
-        Timetable timetable = days.getTimetableByDate(date);
-        return getDayVisits(timetable).get(player);
+    public Visit getVisit(long playerId, LocalDate date) {
+        Player player = players.getPlayer(playerId);
+        return getDayVisits(date).get(player);
     }
 
-    private Map<Player, Visit> getDayVisits(Timetable timetable) {
-        visits.putIfAbsent(timetable, new HashMap<>());
-        return visits.get(timetable);
+    void enableVisit(Visit visitToEnable) {
+        visitToEnable.setActive(true);
+        service.save(visitToEnable);
     }
 
     public String listedPlayersOf(LocalDate date) {
@@ -106,5 +88,29 @@ public class VisitCache {
         }
 
         return joiner.toString();
+    }
+
+    Map<Player, Visit> getDayVisits(Timetable timetable) {
+        visits.putIfAbsent(timetable, new HashMap<>());
+        return visits.get(timetable);
+    }
+
+    Map<Player, Visit> getDayVisits(LocalDate date) {
+        return getDayVisits(days.getTimetableByDate(date));
+    }
+
+    void disableVisit(Visit visitToReserve) {
+        visitToReserve.setActive(false);
+        service.save(visitToReserve);
+    }
+
+    private void fillVisits() {
+        List<Visit> allVisits = service.getAll();
+        for (Visit visit : allVisits) {
+            Player player = visit.getPlayer();
+            Timetable timetable = visit.getTimetable();
+            Map<Player, Visit> dayVisits = getDayVisits(timetable);
+            dayVisits.put(player, visit);
+        }
     }
 }

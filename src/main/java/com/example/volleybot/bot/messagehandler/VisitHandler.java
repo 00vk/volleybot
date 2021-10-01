@@ -2,6 +2,7 @@ package com.example.volleybot.bot.messagehandler;
 
 import com.example.volleybot.bot.BotState;
 import com.example.volleybot.bot.cache.PlayerCache;
+import com.example.volleybot.bot.cache.ReserveCache;
 import com.example.volleybot.bot.cache.TimetableCache;
 import com.example.volleybot.bot.cache.VisitCache;
 import com.example.volleybot.bot.service.InlineKeyboardService;
@@ -29,17 +30,20 @@ public class VisitHandler implements IUpdateHandler{
     private final PlayerCache playerCache;
     private final TimetableCache timetableCache;
     private final VisitCache visitCache;
+    private final ReserveCache reserveCache;
 
     public VisitHandler(SendMessageService messageService,
                         InlineKeyboardService keyboardService,
                         PlayerCache playerCache,
                         TimetableCache timetableCache,
-                        VisitCache visitCache) {
+                        VisitCache visitCache,
+                        ReserveCache reserveCache) {
         this.messageService = messageService;
         this.keyboardService = keyboardService;
         this.playerCache = playerCache;
         this.timetableCache = timetableCache;
         this.visitCache = visitCache;
+        this.reserveCache = reserveCache;
     }
 
     @Override
@@ -53,13 +57,14 @@ public class VisitHandler implements IUpdateHandler{
         }
 
         CallbackQuery callback = update.getCallbackQuery();
-        Long chatId = callback.getMessage().getChatId();
+        Long chatId = callback.getFrom().getId();
         String data = callback.getData();
         if ("/back".equals(data)) {
             backToMainMenu(chatId);
         } else {
             LocalDate date = timetableCache.parse(data);
             visitCache.switchVisitState(chatId, date);
+            reserveCache.manageReserve(date);
             messageService.editKeyboard(chatId, getKeyboard(chatId));
         }
     }
@@ -99,8 +104,8 @@ public class VisitHandler implements IUpdateHandler{
         Set<LocalDate> forwardDates = timetableCache.getForwardDates();
 
         for (LocalDate date : forwardDates) {
-            String text = timetableCache.format(date);
-            callbackData.add(text);
+            String text = timetableCache.toText(date);
+            callbackData.add(timetableCache.format(date));
             Visit visit = visitCache.getVisit(chatId, date);
             if (visit != null) {
                 if (visit.isActive()) {
