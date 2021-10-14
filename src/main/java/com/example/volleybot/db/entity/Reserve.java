@@ -20,7 +20,7 @@ public class Reserve implements Comparable<Reserve>{
     @GeneratedValue
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "visit_id")
     private Visit visit;
 

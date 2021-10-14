@@ -37,7 +37,7 @@ public class Timetable implements Comparable<Timetable>{
 
     public Timetable(LocalDate gameDate) {
         this.gameDate = gameDate;
-        this.playersLimit = 0;
+        this.playersLimit = 12;
         this.enabled = true;
     }
 

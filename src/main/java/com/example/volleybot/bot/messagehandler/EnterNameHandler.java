@@ -6,7 +6,6 @@ import com.example.volleybot.bot.service.SendMessageService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.Update;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
@@ -28,53 +27,34 @@ public class EnterNameHandler implements IUpdateHandler {
     private String adminsValue;
 
     public EnterNameHandler(PlayerCache playerCache,
-                            SendMessageService messageService,
-                            MainHandler mainHandler) {
+                            SendMessageService messageService) {
         this.playerCache = playerCache;
         this.messageService = messageService;
     }
 
     @Override
-    public void handle(Update update) {
-        if (!update.hasMessage()) {
-            return;
+    public boolean handle(Message message) {
+        Long userId = message.getFrom().getId();
+        if (!message.hasText()) {
+            return true;
         }
-        Message message = update.getMessage();
-        Long fromId = message.getFrom().getId();
-        if (message.hasText()) {
-            String playerName = message.getText();
-            boolean isAdmin = admins.contains(fromId);
-            playerCache.setUserBotState(fromId, BotState.MAIN);
-            playerCache.addNewPlayer(fromId, playerName, isAdmin);
-            messageService.log(logText(fromId, playerName));
-            sendMainMessage(fromId, isAdmin);
-        }
-    }
-
-    private String logText(Long id, String name) {
-        return "Зарегистрировался новый пользователь - " + name + " (id" + id + ")";
-    }
-
-    private void sendMainMessage(Long chatId, boolean isAdmin) {
-        messageService.sendMessage(chatId, null, getMainMessage(isAdmin));
-    }
-
-    private String getMainMessage(boolean isAdmin) {
-        return """
-                Доступные команды:
-                /visit - записаться на игру
-                /settings - настройки
-                """;
+        String playerName = message.getText();
+        boolean isAdmin = admins.contains(userId);
+        playerCache.addNewPlayer(userId, playerName, isAdmin);
+        messageService.log(logText(userId, playerName));
+        playerCache.setUserBotState(userId, BotState.MAIN);
+        return false;
     }
 
     @PostConstruct
     private void fillAdminList() {
-        if (!this.admins.isEmpty()) {
-            return;
-        }
         this.admins.addAll(Arrays.stream(adminsValue.split(" "))
                                  .map(Long::parseLong)
                                  .collect(Collectors.toList()));
+    }
+
+    private String logText(Long id, String name) {
+        return "Зарегистрировался новый пользователь - " + name + " (id" + id + ")";
     }
 
     @Override

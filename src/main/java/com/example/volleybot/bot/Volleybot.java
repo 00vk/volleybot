@@ -1,7 +1,7 @@
 package com.example.volleybot.bot;
 
 import com.example.volleybot.bot.config.BotConfig;
-import com.example.volleybot.bot.manager.TimetableManager;
+import com.example.volleybot.bot.service.TimetableManager;
 import com.example.volleybot.bot.service.UpdateService;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.telegram.telegrambots.bots.TelegramWebhookBot;
@@ -38,7 +38,7 @@ public class Volleybot extends TelegramWebhookBot {
 
     @Override
     public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
-        updateService.handleUpdate(update);
+        updateService.onUpdateReceived(update);
         return null;
     }
 

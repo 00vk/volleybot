@@ -5,7 +5,6 @@ import com.example.volleybot.bot.cache.PlayerCache;
 import com.example.volleybot.bot.service.SendMessageService;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 
 /**
@@ -25,11 +24,7 @@ public class StartHandler implements IUpdateHandler {
     }
 
     @Override
-    public void handle(Update update) {
-        if (!update.hasMessage()) {
-            return;
-        }
-        Message message = update.getMessage();
+    public boolean handle(Message message) {
         User author = message.getFrom();
         Long authorId = author.getId();
         String telegramName = author.getFirstName() + " " + author.getLastName();
@@ -37,6 +32,7 @@ public class StartHandler implements IUpdateHandler {
         playerCache.updatePlayer(authorId, telegramName);
         sendMessageService.sendMessage(authorId, null, msgStart());
         sendMessageService.log(logText(authorId, telegramName));
+        return true;
     }
 
     private String msgStart() {
@@ -44,7 +40,7 @@ public class StartHandler implements IUpdateHandler {
     }
 
     private String logText(Long id, String telegramName) {
-        return telegramName + " (id" + id + ") запустил бота";
+        return "%s (id%d) запустил бота".formatted(telegramName, id);
     }
 
     @Override

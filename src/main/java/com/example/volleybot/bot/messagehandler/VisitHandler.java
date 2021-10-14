@@ -2,94 +2,58 @@ package com.example.volleybot.bot.messagehandler;
 
 import com.example.volleybot.bot.BotState;
 import com.example.volleybot.bot.cache.PlayerCache;
-import com.example.volleybot.bot.cache.ReserveCache;
-import com.example.volleybot.bot.cache.TimetableCache;
-import com.example.volleybot.bot.cache.VisitCache;
-import com.example.volleybot.bot.service.InlineKeyboardService;
 import com.example.volleybot.bot.service.SendMessageService;
-import com.example.volleybot.db.entity.Visit;
+import com.example.volleybot.bot.service.VisitManager;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
-import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Created by vkondratiev on 24.09.2021
  * Description:
  */
 @Component
-public class VisitHandler implements IUpdateHandler{
+public class VisitHandler implements IUpdateHandler {
 
     private final SendMessageService messageService;
-    private final InlineKeyboardService keyboardService;
     private final PlayerCache playerCache;
-    private final TimetableCache timetableCache;
-    private final VisitCache visitCache;
-    private final ReserveCache reserveCache;
+    private final VisitManager visitManager;
 
     public VisitHandler(SendMessageService messageService,
-                        InlineKeyboardService keyboardService,
                         PlayerCache playerCache,
-                        TimetableCache timetableCache,
-                        VisitCache visitCache,
-                        ReserveCache reserveCache) {
+                        VisitManager visitManager) {
         this.messageService = messageService;
-        this.keyboardService = keyboardService;
         this.playerCache = playerCache;
-        this.timetableCache = timetableCache;
-        this.visitCache = visitCache;
-        this.reserveCache = reserveCache;
+        this.visitManager = visitManager;
     }
 
     @Override
-    public void handle(Update update) {
-        if (!update.hasCallbackQuery()) {
-            if (!update.hasMessage())
-                return;
-            Long fromId = update.getMessage().getFrom().getId();
-            backToMainMenu(fromId);
-            return;
+    public boolean handle(Message message) {
+        long userId = message.getFrom().getId();
+        if (!message.hasText())
+            return true;
+        String messageText = message.getText();
+        if ("/visit".equals(messageText)) {
+            InlineKeyboardMarkup keyboard = visitManager.visitKeyboard("/visit", userId);
+            messageService.sendUpdatableMessage(userId, keyboard, getVisitMessage());
+            messageService.log(playerCache.getPlayerName(userId) + " выбирает дни для записи");
+            return true;
         }
+        playerCache.setUserBotState(userId, BotState.of(messageText));
+        return false;
+    }
 
-        CallbackQuery callback = update.getCallbackQuery();
-        Long chatId = callback.getFrom().getId();
-        String data = callback.getData();
-        if ("/back".equals(data)) {
-            backToMainMenu(chatId);
-        } else {
-            LocalDate date = timetableCache.parse(data);
-            visitCache.switchVisitState(chatId, date);
-            reserveCache.manageReserve(date);
-            messageService.editKeyboard(chatId, getKeyboard(chatId));
+    @Override
+    public boolean handle(CallbackQuery callback) {
+        long userId = callback.getFrom().getId();
+        String[] commands = callback.getData().split(" ");
+        if ("/main".equals(commands[0])) {
+            playerCache.setUserBotState(userId, BotState.MAIN);
+            return false;
         }
-    }
-
-    private void backToMainMenu(Long chatId) {
-        sendMainMessage(chatId, playerCache.isPlayerAdmin(chatId));
-        playerCache.setUserBotState(chatId, BotState.MAIN);
-    }
-
-    public void handleVisitCommand(Long chatId) {
-        messageService.sendMessage(chatId, getKeyboard(chatId), getVisitMessage());
-        messageService.log(playerCache.getPlayerName(chatId) + " выбирает дни для записи");
-        playerCache.setUserBotState(chatId, BotState.VISIT);
-    }
-
-    private void sendMainMessage(Long chatId, boolean isAdmin) {
-        messageService.sendMessage(chatId, null, getMainMessage(isAdmin));
-    }
-
-    private String getMainMessage(boolean isAdmin) {
-        return """
-                Доступные команды:
-                /visit - записаться на игру
-                /settings - настройки
-                """;
+        visitManager.manage(userId, userId, "/visit", commands[2]);
+        return true;
     }
 
     @Override
@@ -97,33 +61,9 @@ public class VisitHandler implements IUpdateHandler{
         return BotState.VISIT;
     }
 
-
-    private InlineKeyboardMarkup getKeyboard(Long chatId) {
-        List<String> texts = new ArrayList<>();
-        List<String> callbackData = new ArrayList<>();
-        Set<LocalDate> forwardDates = timetableCache.getForwardDates();
-
-        for (LocalDate date : forwardDates) {
-            String text = timetableCache.toText(date);
-            callbackData.add(timetableCache.format(date));
-            Visit visit = visitCache.getVisit(chatId, date);
-            if (visit != null) {
-                if (visit.isActive()) {
-                    text = "✅ " + text + " ✅";
-                } else {
-                    text = "⚠️ " + text + " ⚠️";
-                }
-            }
-            texts.add(text);
-        }
-        texts.add("⏪ назад");
-        callbackData.add("/back");
-        return keyboardService.createKeyboard(2, texts, callbackData);
-    }
-
     private String getVisitMessage() {
         return """
-                Выбери дни для записи
+                📆 Выбери дни для записи
                 ✅ - дни, на которые ты записан;
                 ⚠️ - дни, в которые ты на текущий момент в запасе.
                 """;

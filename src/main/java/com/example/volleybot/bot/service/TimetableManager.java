@@ -1,13 +1,14 @@
-package com.example.volleybot.bot.manager;
+package com.example.volleybot.bot.service;
 
+import com.example.volleybot.bot.cache.ReserveCache;
 import com.example.volleybot.bot.cache.TimetableCache;
 import com.example.volleybot.bot.cache.VisitCache;
-import com.example.volleybot.bot.service.SendMessageService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,41 +24,30 @@ public class TimetableManager {
     private final SendMessageService messageService;
     private final TimetableCache timetable;
     private final VisitCache visits;
+    private final ReserveCache reserves;
 
     public TimetableManager(SendMessageService messageService,
                             TimetableCache timetable,
-                            VisitCache visits) {
+                            VisitCache visits,
+                            ReserveCache reserves) {
         this.messageService = messageService;
         this.timetable = timetable;
         this.visits = visits;
+        this.reserves = reserves;
     }
 
     public void manageDates() {
         messageService.log("Выполняется настройка дат");
         addNewDays();
-        disableOldDays();
-    }
-
-    private void disableOldDays() {
-        Set<LocalDate> oldDates = timetable.getOldEnabledDates();
-        for (LocalDate date : oldDates) {
-            timetable.disableDay(date);
-        }
-    }
-
-    private void addNewDays() {
-        Set<LocalDate> forwardDays = timetable.getForwardDates();
-        for (LocalDate nextMonday : nextMondays()) {
-            if (forwardDays.contains(nextMonday))
-                continue;
-            timetable.addNewDate(nextMonday);
+        for (LocalDate date : timetable.getDatesBefore(LocalDate.now())) {
+            disableDay(date);
         }
     }
 
     @Scheduled(cron = "0 0 19 ? * MON") // 19:00:00; ANY<day-of-month>; EVERY<month>; on Mondays
     private void manageOnMondays() {
         manageDates();
-        timetable.disableDay(LocalDate.now());
+        disableDay(LocalDate.now());
         managePinnedMessage();
     }
 
@@ -66,19 +56,35 @@ public class TimetableManager {
         if (mondays.isEmpty())
             return;
         LocalDate nextMonday = mondays.get(0);
-        String messageText = pinnedMessageText(nextMonday);
+        String messageText = visits.listOfPlayers(nextMonday);
         messageService.nextVisitMessage(messageText);
     }
 
-    private String pinnedMessageText(LocalDate nextMonday) {
-        String dateText = timetable.toText(nextMonday);
-        return "\uD83C\uDFD0 " + dateText + " \uD83C\uDFD0:\n" + visits.listedPlayersOf(nextMonday);
+    private void addNewDays() {
+        Set<LocalDate> forwardDays = timetable.getDatesAfter(LocalDate.now());
+        for (LocalDate nextMonday : nextMondays()) {
+            if (forwardDays.contains(nextMonday))
+                continue;
+            timetable.addNewDate(nextMonday);
+        }
     }
 
-    private List<LocalDate> nextMondays() {
+    private void disableDay(LocalDate date) {
+        reserves.removeReserves(date);
+        visits.removeDisabledVisits(date);
+        if (timetable.isTimetableEnabled(date)) {
+            timetable.disableDay(date);
+        }
+    }
+
+    public List<LocalDate> nextMondays() {
         List<LocalDate> nextMondays = new ArrayList<>();
         LocalDate nextMonday = LocalDate.now();
-        for (int i = 0; i < 4; i++) {
+        if (nextMonday.getDayOfWeek() == DayOfWeek.MONDAY
+                && LocalDateTime.now().isBefore(nextMonday.atTime(19, 0))) {
+            nextMondays.add(nextMonday);
+        }
+        while (nextMondays.size() < 4) {
             nextMonday = nextMonday.with(TemporalAdjusters.next(DayOfWeek.MONDAY));
             nextMondays.add(nextMonday);
         }

@@ -36,17 +36,15 @@ public class TimetableCache {
 
     }
 
-    public Set<LocalDate> getOldEnabledDates() {
-        return allDays.entrySet().stream()
-                      .filter(e -> e.getValue().isEnabled())
-                      .map(Map.Entry::getKey)
-                      .filter(day -> day.isBefore(LocalDate.now()))
-                      .collect(Collectors.toUnmodifiableSet());
+    public Set<LocalDate> getDatesBefore(LocalDate date) {
+        return allDays.keySet().stream()
+                      .filter(day -> day.isBefore(date))
+                      .collect(Collectors.toCollection(TreeSet::new));
     }
 
-    public Set<LocalDate> getForwardDates() {
+    public Set<LocalDate> getDatesAfter(LocalDate other) {
         return allDays.keySet().stream()
-                      .filter(date -> date.isAfter(LocalDate.now()))
+                      .filter(date -> date.isAfter(other))
                       .collect(Collectors.toCollection(TreeSet::new));
     }
 
@@ -94,5 +92,9 @@ public class TimetableCache {
                       .map(Map.Entry::getValue)
                       .sorted(Comparator.reverseOrder())
                       .collect(Collectors.toList());
+    }
+
+    public boolean isTimetableEnabled(LocalDate date) {
+        return getTimetable(date).isEnabled();
     }
 }

@@ -2,8 +2,8 @@ package com.example.volleybot.bot.service;
 
 import com.example.volleybot.bot.BotState;
 import com.example.volleybot.bot.BotStateContext;
-import com.example.volleybot.bot.messagehandler.IUpdateHandler;
 import com.example.volleybot.bot.cache.PlayerCache;
+import com.example.volleybot.bot.messagehandler.IUpdateHandler;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -20,41 +20,64 @@ public class UpdateService {
 
     private final BotStateContext stateContext;
     private final PlayerCache playerCache;
-    private final SendMessageService sendMessageService;
+    private final SendMessageService messageService;
 
     public UpdateService(BotStateContext stateContext,
-                         PlayerCache playerCache, SendMessageService sendMessageService) {
+                         PlayerCache playerCache,
+                         SendMessageService messageService) {
         this.stateContext = stateContext;
         this.playerCache = playerCache;
-        this.sendMessageService = sendMessageService;
+        this.messageService = messageService;
     }
 
-    public void handleUpdate(Update update) {
-        long fromId;
-        if (update.hasMessage()) {
-            User from = update.getMessage().getFrom();
-            if (from.getIsBot() || !update.getMessage().hasText())
-                return;
-            fromId = from.getId();
-        } else if (update.hasCallbackQuery()) {
-            fromId = update.getCallbackQuery().getFrom().getId();
-        } else {
-            return;
-        }
+    public void onUpdateReceived(Update update) {
+        User user = getUser(update);
+        if (user == null || user.getIsBot()) return;
+
         logUpdate(update);
-        BotState botState = playerCache.botState(fromId);
-        IUpdateHandler handler = stateContext.handler(botState);
-        handler.handle(update);
+        changeBotState(update, user);
+        handleUpdate(update, user);
+    }
+
+    private void handleUpdate(Update update, User user) {
+        IUpdateHandler handler;
+        try {
+            do {
+                BotState botState = playerCache.botState(user.getId());
+                handler = stateContext.handler(botState);
+            } while (!handler.handle(update));
+        } catch (Exception e) {
+            messageService.log(e.getMessage());
+            handler = stateContext.handler(BotState.MAIN);
+            handler.handle(update);
+        }
+    }
+
+    private void changeBotState(Update update, User user) {
+        if (!update.hasCallbackQuery()) return;
+        CallbackQuery callback = update.getCallbackQuery();
+        String data = callback.getData();
+        playerCache.setUserBotState(user.getId(), BotState.of(data));
+    }
+
+    private User getUser(Update update) {
+        if (update.hasMessage()) {
+            Message message = update.getMessage();
+            if (!message.hasText() || !message.getChat().isUserChat())
+                return null;
+            return message.getFrom();
+        } else if (update.hasCallbackQuery()) {
+            return update.getCallbackQuery().getFrom();
+        }
+        return null;
     }
 
     private void logUpdate(Update update) {
-        long fromId;
-        String text;
         User author;
-        Message message;
+        String text;
 
         if (update.hasMessage()) {
-            message = update.getMessage();
+            Message message = update.getMessage();
             author = message.getFrom();
             text = message.getText();
         } else if (update.hasCallbackQuery()) {
@@ -65,12 +88,11 @@ public class UpdateService {
             return;
         }
 
-        fromId = author.getId();
-        String name = playerCache.getPlayerName(fromId);
+        String name = playerCache.getPlayerName(author.getId());
         if (name == null)
             name = author.getFirstName() + " " + author.getLastName();
         String logText = logText(name, text);
-        sendMessageService.log(logText);
+        messageService.log(logText);
     }
 
     private String logText(String name, String text) {

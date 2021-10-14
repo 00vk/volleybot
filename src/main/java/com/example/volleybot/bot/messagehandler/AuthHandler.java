@@ -5,7 +5,6 @@ import com.example.volleybot.bot.cache.PlayerCache;
 import com.example.volleybot.bot.service.SendMessageService;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 
 /**
@@ -25,11 +24,7 @@ public class AuthHandler implements IUpdateHandler {
     }
 
     @Override
-    public void handle(Update update) {
-        if (!update.hasMessage()) {
-            return;
-        }
-        Message message = update.getMessage();
+    public boolean handle(Message message) {
         Long fromId = message.getFrom().getId();
         String name = playerCache.getPlayerName(fromId);
         if (name == null) {
@@ -47,6 +42,7 @@ public class AuthHandler implements IUpdateHandler {
                 sendMessageService.log(logAuthFailed(fromId, name));
             }
         }
+        return true;
     }
 
     private String msgGetPass() {
@@ -54,11 +50,11 @@ public class AuthHandler implements IUpdateHandler {
     }
 
     private String logAuthSuccess(Long id, String name) {
-        return name + " (id" + id + ") успешно авторизовался";
+        return "%s (id%d) успешно авторизовался".formatted(name, id);
     }
 
     private String logAuthFailed(Long id, String name) {
-        return name + " (id" + id + ") ввел неверный пароль";
+        return "%s (id%d) ввел неверный пароль".formatted(name, id);
     }
 
     private String msgGetName() {
